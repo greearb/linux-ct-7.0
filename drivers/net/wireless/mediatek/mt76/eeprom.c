@@ -151,7 +151,7 @@ exit:
 }
 EXPORT_SYMBOL_GPL(mt76_get_of_data_from_nvmem);
 
-static int mt76_get_of_data_from_file(struct mt76_dev *dev, void *eep, u32 offset, int len)
+int mt76_get_of_data_from_file(struct mt76_dev *dev, void *eep, u32 offset, int len)
 {
 #if defined(CONFIG_OF)
 	int ret = 0;
@@ -219,6 +219,7 @@ out_put_node:
 	return -ENOENT;
 #endif
 }
+EXPORT_SYMBOL_GPL(mt76_get_of_data_from_file);
 
 static int mt76_get_of_eeprom(struct mt76_dev *dev, void *eep, int len)
 {
