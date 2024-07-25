@@ -6820,7 +6820,6 @@ enum nl80211_feature_flags {
  * @NL80211_EXT_FEATURE_SPP_AMSDU_SUPPORT: The driver has support for SPP
  *	(signaling and payload protected) A-MSDUs and this shall be advertised
  *	in the RSNXE.
- *
  * @NL80211_EXT_FEATURE_BEACON_RATE_EHT: Driver supports beacon rate
  *	configuration (AP/mesh) with EHT rates.
  *
@@ -6832,6 +6831,12 @@ enum nl80211_feature_flags {
  *	driver supports encryption of (Re)Association Request and Response
  *	frames in both non‑AP STA and AP mode as specified in
  *	"IEEE P802.11bi/D3.0, 12.16.6".
+ *
+ * @NL80211_EXT_FEATURE_ETHTOOL_VDEV_STATS: The driver uses the alternate
+ *	ethtool string stat block which include per-vdev accumulator stats.
+ *	This flag is intended for use with IEEE802.11ac and older radios.
+ *	NOTE: This feature will only work if CONFIG_MAC80211_DEBUG_STA_COUNTERS
+ *	is set in the build configuration.
  *
  * @NUM_NL80211_EXT_FEATURES: number of extended features.
  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
@@ -6911,6 +6916,7 @@ enum nl80211_ext_feature_index {
 	NL80211_EXT_FEATURE_BEACON_RATE_EHT,
 	NL80211_EXT_FEATURE_EPPKE,
 	NL80211_EXT_FEATURE_ASSOC_FRAME_ENCRYPTION,
+	NL80211_EXT_FEATURE_ETHTOOL_VDEV_STATS,
 
 	/* add new features before the definition below */
 	NUM_NL80211_EXT_FEATURES,
