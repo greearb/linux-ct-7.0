@@ -97,6 +97,8 @@ void mt76_scan_work(struct work_struct *work)
 	}
 
 	if (dev->scan.chan && phy->num_sta && phy->offchannel) {
+		mt76_dbg(dev, MT76_DBG_SCAN, "%s: moving back to main chandef freq: %d\n",
+			 __func__, phy->main_chandef.chan ? phy->main_chandef.chan->center_freq : -1);
 		dev->scan.chan = NULL;
 		mt76_set_channel(phy, &phy->main_chandef, false);
 		goto out;
@@ -105,8 +107,14 @@ void mt76_scan_work(struct work_struct *work)
 	dev->scan.chan = req->channels[dev->scan.chan_idx++];
 	cfg80211_chandef_create(&chandef, dev->scan.chan, NL80211_CHAN_HT20);
 	if (phy->main_chandef.chan == dev->scan.chan) {
+		mt76_dbg(dev, MT76_DBG_SCAN, "%s: scanning on-channel for freq: %d for chan_idx: %d\n",
+			 __func__, dev->scan.chan->center_freq, dev->scan.chan_idx);
 		chandef = phy->main_chandef;
 		offchannel = false;
+	} else {
+		mt76_dbg(dev, MT76_DBG_SCAN, "%s: moving freq: %d for chan_idx: %d\n",
+			 __func__, dev->scan.chan ? dev->scan.chan->center_freq : -1,
+			 dev->scan.chan_idx);
 	}
 
 	mt76_set_channel(phy, &chandef, offchannel);
