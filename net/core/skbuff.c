@@ -405,6 +405,7 @@ static inline void __finalize_skb_around(struct sk_buff *skb, void *data,
 	/* make sure we initialize shinfo sequentially */
 	shinfo = skb_shinfo(skb);
 	memset(shinfo, 0, offsetof(struct skb_shared_info, dataref));
+	skb->free_status = SKB_ALREADY_ALLOCATED;
 	atomic_set(&shinfo->dataref, 1);
 
 	skb_set_kcov_handle(skb, kcov_common_handle());
@@ -495,6 +496,7 @@ struct sk_buff *__build_skb(void *data, unsigned int frag_size)
 		return NULL;
 
 	skbuff_clear(skb);
+	skb->free_status = SKB_ALREADY_ALLOCATED;
 	__build_skb_around(skb, data, frag_size);
 
 	return skb;
@@ -556,6 +558,7 @@ static struct sk_buff *__napi_build_skb(void *data, unsigned int frag_size)
 		return NULL;
 
 	skbuff_clear(skb);
+	skb->free_status = SKB_ALREADY_ALLOCATED;
 	__build_skb_around(skb, data, frag_size);
 
 	return skb;
@@ -738,6 +741,7 @@ fallback:
 	return skb;
 
 nodata:
+	skb->free_status = SKB_ALREADY_FREED;
 	kmem_cache_free(cache, skb);
 	return NULL;
 }
@@ -1145,6 +1149,7 @@ static void kfree_skbmem(struct sk_buff *skb)
 
 	switch (skb->fclone) {
 	case SKB_FCLONE_UNAVAILABLE:
+		skb->free_status = SKB_ALREADY_FREED;
 		kmem_cache_free(net_hotdata.skbuff_cache, skb);
 		return;
 
@@ -1271,6 +1276,7 @@ static void kfree_skb_add_bulk(struct sk_buff *skb,
 	}
 
 	skb_release_all(skb, reason);
+	skb->free_status = SKB_ALREADY_FREED;
 	sa->skb_array[sa->skb_count++] = skb;
 
 	if (unlikely(sa->skb_count == KFREE_SKB_BULK_SIZE)) {
@@ -1472,6 +1478,7 @@ static void napi_skb_cache_put(struct sk_buff *skb)
 
 	local_lock_nested_bh(&napi_alloc_cache.bh_lock);
 	nc->skb_cache[nc->skb_count++] = skb;
+	skb->free_status = SKB_ALREADY_FREED;
 
 	if (unlikely(nc->skb_count == NAPI_SKB_CACHE_SIZE)) {
 		u32 i, remaining = NAPI_SKB_CACHE_SIZE - NAPI_SKB_CACHE_FREE;
@@ -2119,6 +2126,7 @@ struct sk_buff *skb_clone(struct sk_buff *skb, gfp_t gfp_mask)
 			return NULL;
 
 		n->fclone = SKB_FCLONE_UNAVAILABLE;
+		n->free_status = SKB_ALREADY_ALLOCATED;
 	}
 
 	return __skb_clone(n, skb);
@@ -6149,6 +6157,7 @@ void kfree_skb_partial(struct sk_buff *skb, bool head_stolen)
 {
 	if (head_stolen) {
 		skb_release_head_state(skb);
+		skb->free_status = SKB_ALREADY_FREED;
 		kmem_cache_free(net_hotdata.skbuff_cache, skb);
 	} else {
 		__kfree_skb(skb);
