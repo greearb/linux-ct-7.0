@@ -2239,6 +2239,12 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
 		skb_reserve(skb, 2);
 	}
 
+	if (WARN_ON_ONCE(skb->free_status != SKB_ALREADY_ALLOCATED)) {
+		pr_err("iwl-mld-rx-mpdu 0 skb free-status: 0x%x != 0x%x\n",
+		       skb->free_status, SKB_ALREADY_ALLOCATED);
+		return;
+	}
+
 	rx_status = IEEE80211_SKB_RXCB(skb);
 
 	/* this is needed early */
@@ -2253,6 +2259,12 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
 	sta = iwl_mld_rx_with_sta(mld, hdr, skb, mpdu_desc, pkt, queue, &drop, &link_sta);
 	if (drop)
 		goto drop;
+
+	if (WARN_ON_ONCE(skb->free_status != SKB_ALREADY_ALLOCATED)) {
+		pr_err("iwl-mld-rx-mpdu skb free-status: 0x%x != 0x%x\n",
+		       skb->free_status, SKB_ALREADY_ALLOCATED);
+		goto out;
+	}
 
 	/* update aggregation data for monitor and stats sake */
 	if (phy_data.phy_info & IWL_RX_MPDU_PHY_AMPDU)
@@ -2315,6 +2327,12 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
 	if (iwl_mld_time_sync_frame(mld, skb, hdr->addr2))
 		goto out;
 
+	if (WARN_ON_ONCE(skb->free_status != SKB_ALREADY_ALLOCATED)) {
+		pr_err("iwl-mld-rx-mpdu 2 skb free-status: 0x%x != 0x%x\n",
+		       skb->free_status, SKB_ALREADY_ALLOCATED);
+		goto out;
+	}
+
 	reorder_res = iwl_mld_reorder(mld, napi, queue, sta, skb, mpdu_desc);
 	switch (reorder_res) {
 	case IWL_MLD_PASS_SKB:
@@ -2326,6 +2344,12 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
 	default:
 		WARN_ON(1);
 		goto drop;
+	}
+
+	if (WARN_ON_ONCE(skb->free_status != SKB_ALREADY_ALLOCATED)) {
+		pr_err("iwl-mld-rx-mpdu skb 3 free-status: 0x%x != 0x%x\n",
+		       skb->free_status, SKB_ALREADY_ALLOCATED);
+		goto out;
 	}
 
 	mld->ethtool_stats.rx_pkts++;
